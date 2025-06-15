@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { ScrollView as RNScrollView, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -32,7 +33,7 @@ export default function GeminiChatScreen() {
   useEffect(() => {
     const loadKey = async () => {
       try {
-        const key = await AsyncStorage.getItem('@gemini_api_key');
+        const key = await SecureStore.getItemAsync('gemini_api_key');
         if (key) setApiKey(key);
       } catch (e) {
         console.error('Failed to load API key', e);
@@ -46,8 +47,9 @@ export default function GeminiChatScreen() {
 
   const scrollViewRef = useRef<RNScrollView>(null);
 
+    const insets = useSafeAreaInsets();
   // Call useThemedStyles at the top level and destructure all needed values
-  const { styles, iconColor, primaryColor, backgroundColor } = useThemedStyles();
+  const { styles, iconColor, primaryColor, backgroundColor } = useThemedStyles(insets.bottom);
 
   const handleSendMessage = async () => {
     if (!apiKey.trim()) {
@@ -85,7 +87,7 @@ export default function GeminiChatScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={0}
       >
         <ThemedView style={styles.innerContainer}>
           <ThemedView style={styles.headerContainer}>
@@ -113,7 +115,7 @@ export default function GeminiChatScreen() {
           <ScrollView
             ref={scrollViewRef}
             style={styles.chatContainer}
-            contentContainerStyle={{ paddingBottom: 10, paddingTop: 10 }}
+            contentContainerStyle={{ paddingBottom: 90, paddingTop: 10 }}
             onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
           >
             {chatHistory.map((message, index) => (
@@ -159,7 +161,7 @@ export default function GeminiChatScreen() {
   );
 }
 
-const useThemedStyles = () => {
+const useThemedStyles = (bottomInset: number) => {
   const backgroundColor = useThemeColor({}, 'background');
   const primaryColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
@@ -170,13 +172,13 @@ const useThemedStyles = () => {
 
   // Memoize the styles object itself
   const styles = useMemo(() => StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor },
+    safeArea: { flex: 1, backgroundColor},
     container: { flex: 1, backgroundColor },
     innerContainer: { flex: 1, paddingTop: 15, paddingHorizontal: 15 },
     headerContainer: { marginBottom: 10 },
     title: { textAlign: 'center', marginBottom: 10 },
     input: { marginBottom: 15, color: textColor, backgroundColor, borderColor },
-    chatContainer: { flex: 1, marginBottom: 10, backgroundColor, borderRadius: 8, paddingHorizontal: 10, borderWidth: 1, borderColor },
+    chatContainer: { flex: 1, backgroundColor, borderRadius: 8, paddingHorizontal: 10, borderWidth: 1, borderColor },
     messageBubble: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, marginBottom: 8, maxWidth: '85%' },
     userMessage: { backgroundColor: primaryColor, alignSelf: 'flex-end' },
     aiMessage: { backgroundColor: secondaryBgColor, alignSelf: 'flex-start' },
@@ -189,7 +191,7 @@ const useThemedStyles = () => {
     dropdownPicker: { backgroundColor, borderColor, borderWidth: 1, borderRadius: 8 },
     dropdownContainer: {},
     dropdownListContainer: { backgroundColor, borderColor, borderWidth: 1, borderRadius: 8 },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: borderColor, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 30 : 20, paddingHorizontal: 15, backgroundColor },
+    inputContainer: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: borderColor, paddingTop: 10, paddingBottom: bottomInset, paddingHorizontal: 15, backgroundColor },
     chatInput: { flex: 1, backgroundColor, borderWidth: 1, borderColor, borderRadius: 20, paddingHorizontal: 15, paddingVertical: Platform.OS === 'ios' ? 12 : 8, marginRight: 10, fontSize: 16, maxHeight: 100, color: textColor },
   }), [backgroundColor, primaryColor, textColor, secondaryBgColor, buttonTextColor, borderColor, iconColor]);
 

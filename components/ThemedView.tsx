@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, type ViewProps } from 'react-native';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -7,8 +8,15 @@ export type ThemedViewProps = ViewProps & {
   darkColor?: string;
 };
 
-export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
+export function ThemedView({ children, style, lightColor, darkColor, ...otherProps }: React.PropsWithChildren<ThemedViewProps>) {
   const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
 
-  return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+  const cleanedChildren = React.Children.toArray(children).filter(
+    (child) => !(typeof child === 'string' && child.trim() === '')
+  );
+  return (
+    <View style={[{ backgroundColor }, style]} {...otherProps}>
+      {cleanedChildren}
+    </View>
+  );
 }
