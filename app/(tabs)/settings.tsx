@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Alert, StyleSheet, Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { getItem, setItem } from '@/utils/storage';
 
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -15,7 +15,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     const loadKey = async () => {
       try {
-        const key = await SecureStore.getItemAsync('gemini_api_key');
+        const key = await getItem('gemini_api_key');
         if (key) setApiKey(key);
       } catch (e) {
         console.error('Failed to load API key', e);
@@ -26,7 +26,7 @@ export default function SettingsScreen() {
 
   const handleSave = async () => {
     try {
-      await SecureStore.setItemAsync('gemini_api_key', apiKey.trim());
+      await setItem('gemini_api_key', apiKey.trim());
       Alert.alert('Saved', 'API Key has been saved successfully.');
     } catch (e) {
       console.error('Failed to save API key', e);

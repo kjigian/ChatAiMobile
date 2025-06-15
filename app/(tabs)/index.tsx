@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { getItem } from '@/utils/storage';
 import { ScrollView as RNScrollView, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -33,7 +33,7 @@ export default function GeminiChatScreen() {
   useEffect(() => {
     const loadKey = async () => {
       try {
-        const key = await SecureStore.getItemAsync('gemini_api_key');
+        const key = await getItem('gemini_api_key');
         if (key) setApiKey(key);
       } catch (e) {
         console.error('Failed to load API key', e);
@@ -193,7 +193,7 @@ const useThemedStyles = (bottomInset: number) => {
     dropdownListContainer: { backgroundColor, borderColor, borderWidth: 1, borderRadius: 8 },
     inputContainer: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: borderColor, paddingTop: 10, paddingBottom: bottomInset, paddingHorizontal: 15, backgroundColor },
     chatInput: { flex: 1, backgroundColor, borderWidth: 1, borderColor, borderRadius: 20, paddingHorizontal: 15, paddingVertical: Platform.OS === 'ios' ? 12 : 8, marginRight: 10, fontSize: 16, maxHeight: 100, color: textColor },
-  }), [backgroundColor, primaryColor, textColor, secondaryBgColor, buttonTextColor, borderColor, iconColor]);
+  }), [backgroundColor, primaryColor, textColor, secondaryBgColor, buttonTextColor, borderColor, iconColor, bottomInset]);
 
   // Return the styles object and the specific colors needed in GeminiChatScreen
   return { styles, iconColor, primaryColor, backgroundColor };
