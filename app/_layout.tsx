@@ -25,6 +25,7 @@ export default function RootLayout() {
       <Drawer drawerContent={(props) => <CustomDrawer {...props} />} screenOptions={{ headerShown: true }}>
         <Drawer.Screen name="(tabs)" options={{ title: 'Chat' }} />
         <Drawer.Screen name="conversations" options={{ title: 'Saved Chats' }} />
+        <Drawer.Screen name="settings" options={{ title: 'API Keys' }} />
         <Drawer.Screen name="+not-found" />
       </Drawer>
       <StatusBar style="auto" />

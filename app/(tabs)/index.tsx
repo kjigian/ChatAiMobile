@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedTextInput } from '@/components/ThemedTextInput';
 import { ThemedButton } from '@/components/ThemedButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { createNewConversation, saveConversation, loadConversation, Conversation } from '@/utils/conversations';
 import Markdown from 'react-native-markdown-display';
 import { useProviderModel } from '@/context/ProviderModelContext';
 import { useNavigation } from 'expo-router';
@@ -26,6 +27,14 @@ export default function GeminiChatScreen() {
   const [apiKeys, setApiKeys] = useState<Record<Provider, string>>({ gemini: '', openai: '', anthropic: '' });
 
   // Load API keys from storage
+  // create new conversation on first mount
+  useEffect(() => {
+    (async () => {
+      const conv = await createNewConversation({ provider: selectedProvider, model: selectedModel });
+      setConversation(conv);
+    })();
+  }, []);
+
   useEffect(() => {
         const loadKeys = async () => {
       try {
@@ -48,7 +57,36 @@ export default function GeminiChatScreen() {
   const [userInput, setUserInput] = useState('');
   const navigation = useNavigation<any>();
 
+  // listen for refreshTime param to start new chat
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      const routeAny = navigation.getState()?.routes?.find((rt: any)=>rt.name==='(tabs)');
+      const params = routeAny?.params as any || {};
+      const { refreshTime, loadId } = params;
+      if (loadId) {
+          (async () => {
+            const conv = await loadConversation(loadId);
+            if (conv) {
+              setConversation(conv);
+              setChatHistory(conv.messages as any);
+            }
+            navigation.setParams({ loadId: undefined });
+          })();
+        } else if (refreshTime) {
+        (async () => {
+          const conv = await createNewConversation({ provider: selectedProvider, model: selectedModel });
+          setConversation(conv);
+          setChatHistory([]);
+          // clear param
+          navigation.setParams({ refreshTime: undefined });
+        })();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, selectedProvider, selectedModel]);
+
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const scrollViewRef = useRef<RNScrollView>(null);
@@ -84,6 +122,22 @@ export default function GeminiChatScreen() {
       });
             const newAiMessage: ChatMessage = { role: 'model', text, provider: selectedProvider };
       setChatHistory(prevChat => [...prevChat, newAiMessage]);
+
+      // persist conversation
+      if (conversation) {
+        const updated: Conversation = {
+          ...conversation,
+          provider: selectedProvider,
+          model: selectedModel,
+          messages: [...chatHistory, newUserMessage, newAiMessage],
+        };
+        setConversation(updated);
+        try {
+          await saveConversation(updated);
+        } catch (e) {
+          console.warn('Failed to save conversation', e);
+        }
+      }
     } catch (error) {
       console.error('Gemini API Error:', error);
       Alert.alert('Error', `Failed to get response from Gemini: ${error instanceof Error ? error.message : String(error)}`);

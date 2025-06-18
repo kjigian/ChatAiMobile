@@ -65,6 +65,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
       {/* Navigation Links */}
       <View style={{ marginTop: 24 }}>
         <ThemedText onPress={() => navigation.navigate('(tabs)')} style={{ marginVertical: 8 }}>Chat</ThemedText>
+        <ThemedText onPress={() => navigation.navigate('(tabs)', { screen: 'index', params: { refreshTime: Date.now() } })} style={{ marginVertical: 8 }}>New Chat</ThemedText>
         <ThemedText onPress={() => navigation.navigate('conversations')} style={{ marginVertical: 8 }}>Saved Chats</ThemedText>
         <ThemedText onPress={() => navigation.navigate('settings')} style={{ marginVertical: 8 }}>API Keys</ThemedText>
       </View>

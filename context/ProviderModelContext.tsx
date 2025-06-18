@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { modelOptions } from '@/constants/modelOptions';
 import { Provider } from '@/ai/generateText';
 
 interface ProviderModelContextProps {
@@ -12,7 +13,13 @@ const ProviderModelContext = createContext<ProviderModelContextProps | undefined
 
 export const ProviderModelProvider = ({ children }: { children: ReactNode }) => {
   const [selectedProvider, setSelectedProvider] = useState<Provider>('gemini');
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash-latest');
+  const [selectedModel, setSelectedModel] = useState<string>(modelOptions['gemini'][0].value);
+
+  // Whenever provider changes, reset model to that provider's first entry
+  useEffect(() => {
+    const first = modelOptions[selectedProvider][0]?.value;
+    if (first) setSelectedModel(first);
+  }, [selectedProvider]);
 
   return (
     <ProviderModelContext.Provider value={{ selectedProvider, setSelectedProvider, selectedModel, setSelectedModel }}>
