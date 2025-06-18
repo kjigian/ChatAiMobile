@@ -9,25 +9,37 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function SettingsScreen() {
-  const [apiKey, setApiKey] = useState('');
+      const [geminiKey, setGeminiKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [anthropicKey, setAnthropicKey] = useState('');
   const { styles } = useThemedStyles();
 
   useEffect(() => {
-    const loadKey = async () => {
+        const loadKeys = async () => {
       try {
-        const key = await getItem('gemini_api_key');
-        if (key) setApiKey(key);
+                        const [gKey, oKey, aKey] = await Promise.all([
+          getItem('gemini_api_key'),
+          getItem('openai_api_key'),
+          getItem('anthropic_api_key'),
+        ]);
+        if (gKey) setGeminiKey(gKey);
+        if (oKey) setOpenaiKey(oKey);
+        if (aKey) setAnthropicKey(aKey);
       } catch (e) {
         console.error('Failed to load API key', e);
       }
     };
-    loadKey();
+        loadKeys();
   }, []);
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     try {
-      await setItem('gemini_api_key', apiKey.trim());
-      Alert.alert('Saved', 'API Key has been saved successfully.');
+                await Promise.all([
+      setItem('gemini_api_key', geminiKey.trim()),
+      setItem('openai_api_key', openaiKey.trim()),
+      setItem('anthropic_api_key', anthropicKey.trim()),
+    ]);
+          Alert.alert('Saved', 'API Keys have been saved successfully.');
     } catch (e) {
       console.error('Failed to save API key', e);
       Alert.alert('Error', 'Failed to save API Key.');
@@ -37,11 +49,27 @@ export default function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.title}>Settings</ThemedText>
-      <ThemedText style={styles.label}>Google Gemini API Key</ThemedText>
+            <ThemedText style={styles.label}>Google Gemini API Key</ThemedText>
       <ThemedTextInput
-        value={apiKey}
-        onChangeText={setApiKey}
+        value={geminiKey}
+        onChangeText={setGeminiKey}
         placeholder="Enter Google Gemini API Key"
+        secureTextEntry
+        style={styles.input}
+      />
+      <ThemedText style={styles.label}>OpenAI API Key</ThemedText>
+      <ThemedTextInput
+        value={openaiKey}
+        onChangeText={setOpenaiKey}
+        placeholder="Enter OpenAI API Key"
+        secureTextEntry
+        style={styles.input}
+      />
+            <ThemedText style={styles.label}>Anthropic API Key</ThemedText>
+      <ThemedTextInput
+        value={anthropicKey}
+        onChangeText={setAnthropicKey}
+        placeholder="Enter Anthropic API Key"
         secureTextEntry
         style={styles.input}
       />

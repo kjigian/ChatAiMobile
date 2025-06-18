@@ -1,6 +1,8 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
+import CustomDrawer from '@/components/CustomDrawer';
+import { ProviderModelProvider } from '../context/ProviderModelContext';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
@@ -18,12 +20,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+    <ProviderModelProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Drawer drawerContent={(props) => <CustomDrawer {...props} />} screenOptions={{ headerShown: true }}>
+        <Drawer.Screen name="(tabs)" options={{ title: 'Chat' }} />
+        <Drawer.Screen name="conversations" options={{ title: 'Saved Chats' }} />
+        <Drawer.Screen name="+not-found" />
+      </Drawer>
       <StatusBar style="auto" />
     </ThemeProvider>
+    </ProviderModelProvider>
   );
 }
