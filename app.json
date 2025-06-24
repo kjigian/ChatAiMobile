@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to the camera to take photos for AI analysis.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to the photo library to select images for AI analysis."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +38,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with AI.",
+          "cameraPermission": "The app accesses your camera to let you take photos to share with AI."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { View } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -19,6 +19,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
   const backgroundColor = useThemeColor({}, 'background');
   const borderColor = useThemeColor({}, 'border');
   const textColor = useThemeColor({}, 'text');
+  const primaryColor = useThemeColor({}, 'primary');
 
   const providers: { label: string; value: Provider }[] = [
     { label: 'Gemini', value: 'gemini' },
@@ -64,11 +65,72 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
 
       {/* Navigation Links */}
       <View style={{ marginTop: 24 }}>
-        <ThemedText onPress={() => navigation.navigate('(tabs)')} style={{ marginVertical: 8 }}>Chat</ThemedText>
-        <ThemedText onPress={() => navigation.navigate('(tabs)', { screen: 'index', params: { refreshTime: Date.now() } })} style={{ marginVertical: 8 }}>New Chat</ThemedText>
-        <ThemedText onPress={() => navigation.navigate('conversations')} style={{ marginVertical: 8 }}>Saved Chats</ThemedText>
-        <ThemedText onPress={() => navigation.navigate('settings')} style={{ marginVertical: 8 }}>API Keys</ThemedText>
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('[Drawer] Chat pressed - navigating to tabs');
+            navigation.navigate('(tabs)' as never, { screen: 'index' } as never);
+          }}
+          style={[styles.navButton, { borderColor }]}
+        >
+          <ThemedText style={[styles.navButtonText, { color: textColor }]}>
+            💬 Chat
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            const ts = Date.now();
+            console.log('[Drawer] New Chat pressed at', ts);
+            navigation.navigate('(tabs)' as never, { 
+              screen: 'index', 
+              params: { refreshTime: ts.toString() } 
+            } as never);
+          }}
+          style={[styles.navButton, { borderColor, backgroundColor: primaryColor + '20' }]}
+        >
+          <ThemedText style={[styles.navButtonText, { color: primaryColor }]}>
+            ✨ New Chat
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('[Drawer] History pressed - navigating to conversations tab');
+            navigation.navigate('(tabs)' as never, { screen: 'conversations' } as never);
+          }}
+          style={[styles.navButton, { borderColor }]}
+        >
+          <ThemedText style={[styles.navButtonText, { color: textColor }]}>
+            📚 History
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('[Drawer] Settings pressed - navigating to settings tab');
+            navigation.navigate('(tabs)' as never, { screen: 'settings' } as never);
+          }}
+          style={[styles.navButton, { borderColor }]}
+        >
+          <ThemedText style={[styles.navButtonText, { color: textColor }]}>
+            ⚙️ Settings
+          </ThemedText>
+        </TouchableOpacity>
       </View>
     </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  navButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

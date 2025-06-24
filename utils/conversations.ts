@@ -1,14 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'expo-crypto';
 
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   provider?: string;
+  image?: {
+    uri: string;
+    base64?: string;
+    mimeType?: string;
+  };
 }
 
 export interface Conversation {
   id: string; // uuid
+  title?: string; // optional custom title
   createdAt: string; // ISO date
   updatedAt: string; // ISO date
   provider: string;
@@ -41,8 +47,8 @@ function keyFor(id: string) {
   return `conversation_${id}`;
 }
 
-export async function createNewConversation(initial: Partial<Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'>> = {}) {
-  const id = uuidv4();
+export function createNewConversationInMemory(initial: Partial<Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'>> = {}): Conversation {
+  const id = randomUUID();
   const now = new Date().toISOString();
   const convo: Conversation = {
     id,
@@ -52,9 +58,27 @@ export async function createNewConversation(initial: Partial<Omit<Conversation, 
     model: initial.model ?? 'gemini-1.5-flash-latest',
     messages: initial.messages ?? [],
   };
-  await AsyncStorage.setItem(keyFor(id), JSON.stringify(convo));
-  await addIdToList(id);
   return convo;
+}
+
+export async function createNewConversation(initial: Partial<Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'>> = {}) {
+  const convo = createNewConversationInMemory(initial);
+  await AsyncStorage.setItem(keyFor(convo.id), JSON.stringify(convo));
+  await addIdToList(convo.id);
+  return convo;
+}
+
+export async function saveConversationForFirstTime(convo: Conversation) {
+  // Only save if conversation has messages
+  if (!convo.messages || convo.messages.length === 0) {
+    console.log('[Conversations] Skipping save of empty conversation:', convo.id);
+    return;
+  }
+  
+  const updated = { ...convo, updatedAt: new Date().toISOString() };
+  await AsyncStorage.setItem(keyFor(convo.id), JSON.stringify(updated));
+  await addIdToList(convo.id);
+  console.log('[Conversations] Saved conversation for first time:', convo.id, 'Messages:', convo.messages.length);
 }
 
 export async function saveConversation(convo: Conversation) {
@@ -85,4 +109,59 @@ export async function listConversations(): Promise<Conversation[]> {
 export async function deleteConversation(id: string) {
   await AsyncStorage.removeItem(keyFor(id));
   await removeIdFromList(id);
+}
+
+export async function renameConversation(id: string, newTitle: string) {
+  const convo = await loadConversation(id);
+  if (!convo) throw new Error('Conversation not found');
+  
+  const updated = { ...convo, title: newTitle, updatedAt: new Date().toISOString() };
+  await AsyncStorage.setItem(keyFor(id), JSON.stringify(updated));
+  return updated;
+}
+
+export function generateConversationTitle(conversation: Conversation): string {
+  if (conversation.title) return conversation.title;
+  
+  // Try to extract meaningful title from first user message
+  const firstUserMessage = conversation.messages.find(m => m.role === 'user');
+  if (firstUserMessage) {
+    // Take first 30 characters and add ellipsis if needed
+    const title = firstUserMessage.text.trim().substring(0, 30);
+    return title.length === 30 ? title + '...' : title;
+  }
+  
+  // Fallback to timestamp
+  const date = new Date(conversation.createdAt);
+  return `Chat ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+export async function cleanupEmptyConversations(): Promise<number> {
+  const conversations = await listConversations();
+  let deletedCount = 0;
+  
+  for (const conv of conversations) {
+    if (!conv.messages || conv.messages.length === 0) {
+      console.log('[Conversations] Deleting empty conversation:', conv.id);
+      await deleteConversation(conv.id);
+      deletedCount++;
+    }
+  }
+  
+  console.log('[Conversations] Cleaned up', deletedCount, 'empty conversations');
+  return deletedCount;
+}
+
+export async function deleteAllConversations(): Promise<number> {
+  const conversations = await listConversations();
+  let deletedCount = 0;
+  
+  for (const conv of conversations) {
+    console.log('[Conversations] Deleting conversation:', conv.id);
+    await deleteConversation(conv.id);
+    deletedCount++;
+  }
+  
+  console.log('[Conversations] Deleted all', deletedCount, 'conversations');
+  return deletedCount;
 }
