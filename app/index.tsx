@@ -462,23 +462,25 @@ export default function GeminiChatScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        >
-          <ThemedView style={styles.innerContainer}>
-          <ThemedView style={styles.headerContainer} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+        <ThemedView style={styles.innerContainer}>
+        <ThemedView style={styles.headerContainer} />
 
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.chatContainer}
-            contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
-            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.chatContainer}
+          contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          bounces={true}
+          onScrollBeginDrag={Keyboard.dismiss}
+        >
             {chatHistory.map((message, index) => (
               <ThemedView
                 key={index}
@@ -561,10 +563,9 @@ export default function GeminiChatScreen() {
               />
               <ThemedButton title="Send" onPress={handleSendMessage} disabled={isLoading} />
             </ThemedView>
-          </ThemedView>
-          </ThemedView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+        </ThemedView>
+        </ThemedView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -23,7 +23,9 @@ export default function RootLayout() {
     <ProviderModelProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Drawer drawerContent={(props) => <CustomDrawer {...props} />} screenOptions={{ headerShown: true }}>
-        <Drawer.Screen name="(tabs)" options={{ title: 'GeminiChat' }} />
+        <Drawer.Screen name="index" options={{ title: 'GeminiChat' }} />
+        <Drawer.Screen name="conversations" options={{ title: 'History' }} />
+        <Drawer.Screen name="settings" options={{ title: 'Settings' }} />
         <Drawer.Screen name="+not-found" />
       </Drawer>
       <StatusBar style="auto" />

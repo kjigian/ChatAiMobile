@@ -68,7 +68,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
         <TouchableOpacity 
           onPress={() => {
             console.log('[Drawer] Chat pressed - navigating to tabs');
-            navigation.navigate('(tabs)' as never, { screen: 'index' } as never);
+            navigation.navigate('index' as never, { screen: 'index' } as never);
           }}
           style={[styles.navButton, { borderColor }]}
         >
@@ -81,7 +81,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
           onPress={() => {
             const ts = Date.now();
             console.log('[Drawer] New Chat pressed at', ts);
-            navigation.navigate('(tabs)' as never, { 
+            navigation.navigate('index' as never, { 
               screen: 'index', 
               params: { refreshTime: ts.toString() } 
             } as never);
@@ -96,7 +96,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
         <TouchableOpacity 
           onPress={() => {
             console.log('[Drawer] History pressed - navigating to conversations tab');
-            navigation.navigate('(tabs)' as never, { screen: 'conversations' } as never);
+            navigation.navigate('conversations' as never, { screen: 'conversations' } as never);
           }}
           style={[styles.navButton, { borderColor }]}
         >
@@ -108,7 +108,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
         <TouchableOpacity 
           onPress={() => {
             console.log('[Drawer] Settings pressed - navigating to settings tab');
-            navigation.navigate('(tabs)' as never, { screen: 'settings' } as never);
+            navigation.navigate('settings' as never, { screen: 'settings' } as never);
           }}
           style={[styles.navButton, { borderColor }]}
         >

@@ -1,26 +1,32 @@
 {
   "expo": {
-    "name": "GeminiChatApp",
-    "slug": "GeminiChatApp",
+    "name": "MobileChatAI",
+    "slug": "MobileChatAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "geminichatapp",
+    "scheme": "mobilechatai",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to the camera to take photos for AI analysis.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to the photo library to select images for AI analysis."
-      }
+        "NSPhotoLibraryUsageDescription": "This app needs access to the photo library to select images for AI analysis.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.kjig.MobileChatAI"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.kjig.MobileChatAI",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -49,6 +55,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "eca58249-a810-4fea-938e-faeb0b042882"
+      }
     }
   }
 }

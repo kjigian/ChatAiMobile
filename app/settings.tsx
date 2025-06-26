@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Alert, StyleSheet, Platform, View, KeyboardAvoidingView } from 'react-native';
+import { Alert, StyleSheet, Platform, View, KeyboardAvoidingView, ScrollView, Vibration } from 'react-native';
 import { getItem, setItem } from '@/utils/storage';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -57,32 +57,81 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAllChats = () => {
+    // First scary warning with vibration
+    Vibration.vibrate([100, 50, 100, 50, 100]);
+    
     Alert.alert(
-      '🚨 Delete All Chats',
-      'This will permanently delete ALL your conversations. This action cannot be undone.\n\nAre you absolutely sure?',
+      '💀🚨 NUCLEAR OPTION ACTIVATED 🚨💀',
+      'YOU ARE ABOUT TO COMMIT DATA GENOCIDE!\n\n🔥 This will OBLITERATE every single conversation\n💣 DESTROY all your precious memories\n☠️ ANNIHILATE months of chat history\n\n😱 ARE YOU ABSOLUTELY, POSITIVELY, 100% CERTAIN YOU WANT TO PROCEED WITH THIS DIGITAL ARMAGEDDON?',
       [
         {
-          text: 'Cancel',
+          text: '🏃‍♂️ RUN AWAY!',
           style: 'cancel',
         },
         {
-          text: 'Delete All',
+          text: '🔥 BRING THE APOCALYPSE',
+          style: 'destructive',
+          onPress: () => showSecondWarning(),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const showSecondWarning = () => {
+    // Second warning with more vibration
+    Vibration.vibrate([200, 100, 200, 100, 200]);
+    
+    Alert.alert(
+      '😈 FINAL WARNING BEFORE DIGITAL DEATH 😈',
+      'WAIT! THINK ABOUT WHAT YOU\'RE DOING!\n\n💭 Remember that funny conversation?\n🥰 That sweet AI response?\n🤓 Those brilliant insights?\n\nTHEY WILL ALL BE GONE FOREVER!\n\n🚨 LAST CHANCE TO SAVE YOUR DIGITAL SOUL! 🚨',
+      [
+        {
+          text: '🙏 SPARE MY DATA!',
+          style: 'cancel',
+        },
+        {
+          text: '💀 EXECUTE ORDER 66',
+          style: 'destructive',
+          onPress: () => showFinalCountdown(),
+        },
+      ],
+      { cancelable: false } // No backing out now!
+    );
+  };
+
+  const showFinalCountdown = () => {
+    // Final dramatic warning
+    Vibration.vibrate([500, 200, 500, 200, 500]);
+    
+    Alert.alert(
+      '☠️ THE POINT OF NO RETURN ☠️',
+      'YOU HAVE CHOSEN... POORLY.\n\n🔥 Initiating TOTAL DATA ANNIHILATION\n💣 Preparing CONVERSATION CREMATORIUM\n⚙️ Loading MEMORY DESTRUCTION PROTOCOL\n\nPress COMMIT DIGITAL SUICIDE to finalize your doom, or FLEE FOR YOUR LIFE to escape this madness!',
+      [
+        {
+          text: '🏃‍♀️ FLEE FOR YOUR LIFE!',
+          style: 'cancel',
+        },
+        {
+          text: '💀 COMMIT DIGITAL SUICIDE',
           style: 'destructive',
           onPress: async () => {
             try {
+              Vibration.vibrate(1000); // Long scary vibration
               const deletedCount = await deleteAllConversations();
               Alert.alert(
-                'Chats Deleted',
-                `Successfully deleted ${deletedCount} conversation${deletedCount !== 1 ? 's' : ''}.`
+                '☠️ MISSION ACCOMPLISHED ☠️',
+                `💥 BOOM! 💥\n\nYou have successfully OBLITERATED ${deletedCount} conversation${deletedCount !== 1 ? 's' : ''}.\n\n🔥 Your digital past has been INCINERATED!\n💀 Hope you don\'t regret this...`,
+                [{ text: '😭 I\'VE MADE A HUGE MISTAKE' }]
               );
             } catch (error) {
               console.error('Failed to delete conversations:', error);
-              Alert.alert('Error', 'Failed to delete conversations. Please try again.');
+              Alert.alert('😱 DESTRUCTION FAILED!', 'Even the apocalypse has bugs! Try again if you dare...');
             }
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: false }
     );
   };
 
@@ -102,7 +151,7 @@ export default function SettingsScreen() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <ThemedText type="title" style={styles.title}>Settings</ThemedText>
         
         <ThemedView style={styles.section}>
@@ -168,15 +217,18 @@ export default function SettingsScreen() {
 
         <ThemedButton title="Save Settings" onPress={handleSave} style={styles.saveButton} />
         
-        <ThemedView style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Data Management</ThemedText>
+        <ThemedView style={styles.dangerSection}>
+          <ThemedText style={styles.dangerSectionTitle}>⚠️ DANGER ZONE ⚠️</ThemedText>
+          <ThemedText style={styles.warningText}>
+            The following action is IRREVERSIBLE and will PERMANENTLY destroy all your data!
+          </ThemedText>
           <ThemedButton 
-            title="🗑️ Delete All Chats" 
+            title="💀 NUCLEAR DELETE ALL CHATS 💀" 
             onPress={handleDeleteAllChats} 
-            style={styles.deleteButton}
+            style={styles.nuclearDeleteButton}
           />
         </ThemedView>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -188,6 +240,7 @@ const useThemedStyles = () => {
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor },
+    scrollView: { flex: 1 },
     content: { flexGrow: 1 },
     title: { textAlign: 'center', marginBottom: 20, color: textColor, paddingHorizontal: 20, paddingTop: 20 },
     section: { marginBottom: 30, paddingHorizontal: 20 },
@@ -219,14 +272,54 @@ const useThemedStyles = () => {
       color: textColor,
       fontSize: 16,
     },
-    deleteButton: {
-      backgroundColor: '#FF3B30',
-      alignSelf: 'center',
-      paddingHorizontal: 40,
-      paddingVertical: 12,
+    dangerSection: {
+      marginBottom: 30, 
+      paddingHorizontal: 20,
+      backgroundColor: '#1a0000',
+      borderWidth: 3,
+      borderColor: '#FF0000',
+      borderRadius: 15,
       marginHorizontal: 20,
+      paddingVertical: 20,
+      shadowColor: '#FF0000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 10,
+      elevation: 10,
+    },
+    dangerSectionTitle: {
+      fontSize: 20,
+      fontWeight: '900',
+      marginBottom: 15,
+      color: '#FF0000',
+      textAlign: 'center',
+      textShadowColor: '#FF0000',
+      textShadowOffset: { width: 0, height: 0 },
+      textShadowRadius: 5,
+    },
+    warningText: {
+      fontSize: 14,
+      color: '#FF6B6B',
+      textAlign: 'center',
       marginBottom: 20,
-      borderRadius: 8,
+      fontWeight: '600',
+      lineHeight: 20,
+    },
+    nuclearDeleteButton: {
+      backgroundColor: '#8B0000',
+      alignSelf: 'center',
+      paddingHorizontal: 30,
+      paddingVertical: 15,
+      marginHorizontal: 20,
+      marginBottom: 10,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#FF0000',
+      shadowColor: '#FF0000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1,
+      shadowRadius: 15,
+      elevation: 15,
     },
   }), [backgroundColor, textColor, borderColor]);
 
