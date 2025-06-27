@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Alert, StyleSheet, Platform, View, KeyboardAvoidingView, ScrollView, Vibration } from 'react-native';
-import { getItem, setItem } from '@/utils/storage';
+import { Alert, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, Vibration } from 'react-native';
+import { getSecureItem, setSecureItem } from '@/utils/storage';
+import { sanitizeApiKey } from '@/utils/validation';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 import { ThemedView } from '@/components/ThemedView';
@@ -11,6 +12,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { useProviderModel } from '@/context/ProviderModelContext';
 import { modelOptions, ModelOption } from '@/constants/modelOptions';
 import { deleteAllConversations } from '@/utils/conversations';
+import { EnhancedSettings } from '@/components/EnhancedSettings';
 
 export default function SettingsScreen() {
   const [geminiKey, setGeminiKey] = useState('');
@@ -28,9 +30,9 @@ export default function SettingsScreen() {
         const loadKeys = async () => {
       try {
                         const [gKey, oKey, aKey] = await Promise.all([
-          getItem('gemini_api_key'),
-          getItem('openai_api_key'),
-          getItem('anthropic_api_key'),
+          getSecureItem('gemini_api_key'),
+          getSecureItem('openai_api_key'),
+          getSecureItem('anthropic_api_key'),
         ]);
         if (gKey) setGeminiKey(gKey);
         if (oKey) setOpenaiKey(oKey);
@@ -44,12 +46,33 @@ export default function SettingsScreen() {
 
     const handleSave = async () => {
     try {
-                await Promise.all([
-      setItem('gemini_api_key', geminiKey.trim()),
-      setItem('openai_api_key', openaiKey.trim()),
-      setItem('anthropic_api_key', anthropicKey.trim()),
-    ]);
-          Alert.alert('Saved', 'API Keys have been saved successfully.');
+      // Validate and sanitize API keys before saving
+      const keys = [
+        { key: geminiKey.trim(), name: 'Gemini' },
+        { key: openaiKey.trim(), name: 'OpenAI' },
+        { key: anthropicKey.trim(), name: 'Anthropic' }
+      ];
+
+      const sanitizedKeys: string[] = [];
+      for (const { key, name } of keys) {
+        if (key) {
+          const validation = sanitizeApiKey(key);
+          if (!validation.isValid) {
+            Alert.alert('Invalid API Key', `${name} API key is invalid: ${validation.error}`);
+            return;
+          }
+          sanitizedKeys.push(validation.sanitized || key);
+        } else {
+          sanitizedKeys.push('');
+        }
+      }
+
+      await Promise.all([
+        setSecureItem('gemini_api_key', sanitizedKeys[0]),
+        setSecureItem('openai_api_key', sanitizedKeys[1]),
+        setSecureItem('anthropic_api_key', sanitizedKeys[2]),
+      ]);
+      Alert.alert('Saved', 'API Keys have been saved successfully.');
     } catch (e) {
       console.error('Failed to save API key', e);
       Alert.alert('Error', 'Failed to save API Key.');
@@ -162,7 +185,13 @@ export default function SettingsScreen() {
             value={selectedProvider}
             items={providerItems}
             setOpen={setProviderOpen}
-            setValue={setSelectedProvider}
+            setValue={(callback) => {
+              if (typeof callback === 'function') {
+                setSelectedProvider(callback(selectedProvider));
+              } else {
+                setSelectedProvider(callback);
+              }
+            }}
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
             textStyle={styles.dropdownText}
@@ -178,13 +207,24 @@ export default function SettingsScreen() {
             value={selectedModel}
             items={currentModelItems}
             setOpen={setModelOpen}
-            setValue={setSelectedModel}
+            setValue={(callback) => {
+              if (typeof callback === 'function') {
+                setSelectedModel(callback(selectedModel));
+              } else {
+                setSelectedModel(callback);
+              }
+            }}
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
             textStyle={styles.dropdownText}
             zIndex={1000}
             zIndexInverse={2000}
           />
+        </ThemedView>
+
+        <ThemedView style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Customization</ThemedText>
+          <EnhancedSettings />
         </ThemedView>
 
         <ThemedView style={styles.section}>

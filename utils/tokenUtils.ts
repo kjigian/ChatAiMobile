@@ -1,4 +1,5 @@
 import { Provider } from '@/ai/generateText';
+import { TokenEstimator } from './tokenizer';
 
 const TOKEN_LIMITS: Record<Provider, number> = {
   gemini: 1000000, // Gemini 1.5 models have very high context
@@ -8,10 +9,8 @@ const TOKEN_LIMITS: Record<Provider, number> = {
 
 const SAFETY_MARGIN = 0.8; // Use 80% of limit to leave room for response
 
-export function estimateTokens(text: string): number {
-  // Rough estimation: 1 token ≈ 4 characters for English text
-  // This is a simplified approach; real tokenization would be more accurate
-  return Math.ceil(text.length / 4);
+export function estimateTokens(text: string, provider: Provider = 'openai'): number {
+  return TokenEstimator.smartEstimate(text, provider);
 }
 
 export function getContextLimit(provider: Provider): number {
@@ -21,18 +20,21 @@ export function getContextLimit(provider: Provider): number {
 export interface ChatTurn {
   role: 'user' | 'model';
   text: string;
+  image?: any;
 }
 
 export function trimContextByTokens(
   history: ChatTurn[],
   newPrompt: string,
-  provider: Provider
+  provider: Provider,
+  newImage?: any
 ): ChatTurn[] {
   const contextLimit = getContextLimit(provider);
-  const promptTokens = estimateTokens(newPrompt);
+  const promptTokens = estimateTokens(newPrompt, provider);
+  const imageTokens = newImage ? TokenEstimator.estimateConversationTokens([{ text: '', image: newImage }], provider) : 0;
   
-  // Reserve tokens for the new prompt
-  const availableTokens = contextLimit - promptTokens;
+  // Reserve tokens for the new prompt and image
+  const availableTokens = contextLimit - promptTokens - imageTokens;
   
   if (availableTokens <= 0) {
     // If prompt itself is too large, return empty history
@@ -44,7 +46,9 @@ export function trimContextByTokens(
   
   // Add messages from most recent backwards until we hit the limit
   for (let i = history.length - 1; i >= 0; i--) {
-    const messageTokens = estimateTokens(history[i].text);
+    const messageTokens = history[i].image 
+      ? TokenEstimator.estimateConversationTokens([history[i]], provider)
+      : estimateTokens(history[i].text, provider);
     
     if (totalTokens + messageTokens > availableTokens) {
       break;

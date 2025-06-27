@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { trimContextByTokens } from '@/utils/tokenUtils';
 import { modelSupportsImages } from '@/constants/modelOptions';
+import { ResponseCache } from '@/utils/responseCache';
+import { logger } from '@/utils/logger';
+import { loadAISDK } from '@/utils/dynamicAI';
 
 function stripImagesFromHistory(history: ChatTurn[]): ChatTurn[] {
   return history.map(turn => ({
@@ -59,10 +59,26 @@ export async function generateText({ provider, model, prompt, apiKey, history = 
   const processedImage = supportsImages ? image : undefined;
   
   // Smart context trimming based on token limits
-  const trimmedHistory = trimContextByTokens(processedHistory, prompt, provider);
+  const trimmedHistory = trimContextByTokens(processedHistory, prompt, provider, processedImage);
+
+  // Check cache first
+  const cacheRequest = {
+    prompt,
+    provider,
+    model,
+    imageHash: ResponseCache.generateImageHash(processedImage),
+    historyHash: ResponseCache.generateHistoryHash(trimmedHistory),
+  };
+
+  const cachedResponse = await ResponseCache.getCached(cacheRequest);
+  if (cachedResponse) {
+    logger.log('Using cached response for prompt:', prompt.substring(0, 50));
+    return cachedResponse;
+  }
 
   switch (provider) {
     case 'gemini': {
+      const GoogleGenerativeAI = await loadAISDK('gemini');
       const genAI = new GoogleGenerativeAI(apiKey);
                   const geminiModel = genAI.getGenerativeModel({ model });
       const historyForGemini = trimmedHistory.map(h => {
@@ -93,9 +109,17 @@ export async function generateText({ provider, model, prompt, apiKey, history = 
       }
       
       const result = await chatSession.sendMessage(messageParts);
-      return result.response.text();
+      const responseText = result.response.text();
+      
+      // Cache the response for future use
+      if (responseText) {
+        await ResponseCache.setCached(cacheRequest, responseText);
+      }
+      
+      return responseText;
     }
     case 'openai': {
+      const OpenAI = await loadAISDK('openai');
       const client = new OpenAI({ apiKey });
       const messages = [
         ...trimmedHistory.map(h => {
@@ -127,9 +151,17 @@ export async function generateText({ provider, model, prompt, apiKey, history = 
         model,
         messages: messages as any,
       });
-      return completion.choices?.[0]?.message?.content ?? '';
+      const responseText = completion.choices?.[0]?.message?.content ?? '';
+      
+      // Cache the response for future use
+      if (responseText) {
+        await ResponseCache.setCached(cacheRequest, responseText);
+      }
+      
+      return responseText;
     }
     case 'anthropic': {
+      const Anthropic = await loadAISDK('anthropic');
       const anthropic = new Anthropic({ apiKey });
       const messages = [
         ...trimmedHistory.map(h => {
@@ -166,7 +198,14 @@ export async function generateText({ provider, model, prompt, apiKey, history = 
         max_tokens: 1024,
         messages: messages as any,
       });
-      return (response?.content?.[0]?.text ?? '') as string;
+      const result = (response?.content?.[0]?.text ?? '') as string;
+      
+      // Cache the response for future use
+      if (result) {
+        await ResponseCache.setCached(cacheRequest, result);
+      }
+      
+      return result;
     }
     default:
       throw new Error(`Unsupported provider: ${provider}`);

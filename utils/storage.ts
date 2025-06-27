@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { encryptForWeb, decryptForWeb } from './encryption';
 
 /**
  * Cross-platform key–value storage abstraction.
@@ -64,8 +65,24 @@ if (Platform.OS === 'web') {
   };
 }
 
+// Secure storage methods with encryption for sensitive data
 export const getItem = (key: string) => storage.getItem(key);
 export const setItem = (key: string, value: string) => storage.setItem(key, value);
 export const deleteItem = (key: string) => storage.deleteItem?.(key);
+
+// Special methods for API keys with encryption on web
+export const getSecureItem = async (key: string): Promise<string | null> => {
+  const value = await storage.getItem(key);
+  if (!value) return null;
+  
+  // Decrypt on web platforms
+  return await decryptForWeb(value);
+};
+
+export const setSecureItem = async (key: string, value: string): Promise<void> => {
+  // Encrypt on web platforms before storing
+  const encryptedValue = await encryptForWeb(value);
+  return storage.setItem(key, encryptedValue);
+};
 
 export default { getItem, setItem, deleteItem };

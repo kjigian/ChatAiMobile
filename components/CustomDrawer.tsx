@@ -31,7 +31,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
 
   return (
     <ThemedView style={{ flex: 1, padding: 16 }}>
-      <ThemedText type="title" style={{ marginBottom: 12 }}>Settings</ThemedText>
+      <ThemedText type="title" style={{ marginTop: 30, marginBottom: 12 }}>Settings</ThemedText>
 
       {/* Provider Picker */}
       <ThemedText style={{ marginBottom: 4 }}>Provider</ThemedText>
@@ -67,8 +67,8 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
       <View style={{ marginTop: 24 }}>
         <TouchableOpacity 
           onPress={() => {
-            console.log('[Drawer] Chat pressed - navigating to tabs');
-            navigation.navigate('index' as never, { screen: 'index' } as never);
+            console.log('[Drawer] Chat pressed');
+            navigation.navigate('index');
           }}
           style={[styles.navButton, { borderColor }]}
         >
@@ -81,10 +81,7 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
           onPress={() => {
             const ts = Date.now();
             console.log('[Drawer] New Chat pressed at', ts);
-            navigation.navigate('index' as never, { 
-              screen: 'index', 
-              params: { refreshTime: ts.toString() } 
-            } as never);
+            navigation.navigate('index', { refreshTime: ts.toString() });
           }}
           style={[styles.navButton, { borderColor, backgroundColor: primaryColor + '20' }]}
         >
@@ -95,8 +92,8 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
 
         <TouchableOpacity 
           onPress={() => {
-            console.log('[Drawer] History pressed - navigating to conversations tab');
-            navigation.navigate('conversations' as never, { screen: 'conversations' } as never);
+            console.log('[Drawer] History pressed');
+            navigation.navigate('conversations');
           }}
           style={[styles.navButton, { borderColor }]}
         >
@@ -107,8 +104,8 @@ export default function CustomDrawer(props: DrawerContentComponentProps) {
 
         <TouchableOpacity 
           onPress={() => {
-            console.log('[Drawer] Settings pressed - navigating to settings tab');
-            navigation.navigate('settings' as never, { screen: 'settings' } as never);
+            console.log('[Drawer] Settings pressed');
+            navigation.navigate('settings');
           }}
           style={[styles.navButton, { borderColor }]}
         >
